@@ -1,4 +1,8 @@
 1. Clone the repo
+2. Install dependencies:
+```
+sudo apt-get install nginx php7.0-fpm letsencrypt
+```
 2. Symlink the files to their locations:
 ```
 sudo ln -s ~/web-server/reverseproxy /etc/nginx/sites-enabled/reverseproxy
@@ -13,4 +17,3 @@ sudo ln -s ~/web-server/ssl-153.duckdns.org.conf /etc/nginx/snippets/ssl-153.duc
 4. Generate the Diffie-Helman Group:
 
 `sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048`
-
