@@ -1,3 +1,8 @@
+
+upstream transmission  {
+      server 192.168.1.2:9091;
+}
+
 server {
 	listen 80 default_server;
 	listen [::]:80 default_server;
@@ -38,14 +43,44 @@ server {
 		fastcgi_pass unix:/run/php/php7.0-fpm.sock;
 	}
 
-	location /transmission/ {
-		proxy_pass http://192.168.1.2:9091;
-		proxy_http_version 1.1;
-		proxy_pass_header X-Transmission-Session-Id;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header Upgrade $http_upgrade;
-		proxy_set_header Connection $http_connection;
-		access_log off;		
+	location ^~ /transmission {
+      
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header Host $http_host;
+          proxy_set_header X-NginX-Proxy true;
+          proxy_http_version 1.1;
+          proxy_set_header Connection "";
+          proxy_pass_header X-Transmission-Session-Id;
+          add_header   Front-End-Https   on;
+      
+          location /transmission/rpc {
+              proxy_pass http://transmission;
+          }
+      
+          location /transmission/web/ {
+              proxy_pass http://transmission;
+          }
+      
+          location /transmission/upload {
+              proxy_pass http://transmission;
+          }
+      
+          location /transmission/web/style/ {
+              alias /usr/share/transmission/web/style/;
+          }
+      
+          location /transmission/web/javascript/ {
+              alias /usr/share/transmission/web/javascript/;
+          }
+      
+          location /transmission/web/images/ {
+              alias /usr/share/transmission/web/images/;
+          }
+          
+          location /transmission/ {
+              return 301 https://$server_name/transmission/web;
+          }
 	}
 
 	location /guac {
