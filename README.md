@@ -9,6 +9,7 @@ sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.default
 sudo ln -s ~/web-server/reverseproxy /etc/nginx/sites-enabled/reverseproxy
 sudo ln -s ~/web-server/nginx.conf /etc/nginx/nginx.conf
 sudo ln -s ~/web-server/ssl-153.duckdns.org.conf /etc/nginx/snippets/ssl-153.duckdns.org.conf
+sudo ln -s ~/web-server/ssl-params.conf /etc/nginx/snippets/ssl-params.conf
 ```
   
 3. Generate the SSL certificate:
@@ -18,3 +19,7 @@ sudo ln -s ~/web-server/ssl-153.duckdns.org.conf /etc/nginx/snippets/ssl-153.duc
 4. Generate the Diffie-Helman Group:
 
 `sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048`
+
+5. Test nGinx config and restart:
+
+`sudo nginx -t && sudo nginx -s reload`
