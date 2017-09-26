@@ -33,5 +33,5 @@ sudo ln -s ~/web-server/ssl-params.conf /etc/nginx/snippets/ssl-params.conf
 
 ### Guacamole
 
-*[Installing Guacamole with Docker](https://guacamole.incubator.apache.org/doc/gug/guacamole-docker.html)
-*[Steps to put everything in a seperate container](https://www.cb-net.co.uk/linux/running-guacamole-from-a-docker-container-on-ubuntu-16-04-lts-16-10/)
+* [Installing Guacamole with Docker](https://guacamole.incubator.apache.org/doc/gug/guacamole-docker.html)
+* [Steps to put everything in a seperate container](https://www.cb-net.co.uk/linux/running-guacamole-from-a-docker-container-on-ubuntu-16-04-lts-16-10/)
