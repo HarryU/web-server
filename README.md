@@ -5,6 +5,7 @@ sudo apt-get install nginx php7.0-fpm letsencrypt
 ```
 2. Symlink the files to their locations:
 ```
+sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.default
 sudo ln -s ~/web-server/reverseproxy /etc/nginx/sites-enabled/reverseproxy
 sudo ln -s ~/web-server/nginx.conf /etc/nginx/nginx.conf
 sudo ln -s ~/web-server/ssl-153.duckdns.org.conf /etc/nginx/snippets/ssl-153.duckdns.org.conf
