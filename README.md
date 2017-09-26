@@ -35,3 +35,11 @@ sudo ln -s ~/web-server/ssl-params.conf /etc/nginx/snippets/ssl-params.conf
 
 * [Installing Guacamole with Docker](https://guacamole.incubator.apache.org/doc/gug/guacamole-docker.html)
 * [Steps to put everything in a seperate container](https://www.cb-net.co.uk/linux/running-guacamole-from-a-docker-container-on-ubuntu-16-04-lts-16-10/)
+
+### Searx
+
+* [Docker installation](https://asciimoo.github.io/searx/dev/install/installation.html)
+
+`docker pull wonderfall/searx`
+`docker run -d --name searx -p 8888:8888 wonderfall/searx`
+
