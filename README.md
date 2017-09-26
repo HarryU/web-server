@@ -1,7 +1,9 @@
+# Web server and container host setup
+## Setting up the web server
 1. Clone the repo
 2. Install dependencies:
 ```
-sudo apt-get install nginx php7.0-fpm letsencrypt
+sudo apt install nginx php7.0-fpm letsencrypt
 ```
 2. Symlink the files to their locations:
 ```
@@ -23,3 +25,13 @@ sudo ln -s ~/web-server/ssl-params.conf /etc/nginx/snippets/ssl-params.conf
 5. Test nGinx config and restart:
 
 `sudo nginx -t && sudo nginx -s reload`
+
+## Setting up containerized services
+
+`sudo apt install docker.io`
+`sudo usermod -aG docker $(whoami)`
+
+### Guacamole
+
+*[Installing Guacamole with Docker](https://guacamole.incubator.apache.org/doc/gug/guacamole-docker.html)
+*[Steps to put everything in a seperate container](https://www.cb-net.co.uk/linux/running-guacamole-from-a-docker-container-on-ubuntu-16-04-lts-16-10/)
