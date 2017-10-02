@@ -2,6 +2,11 @@ upstream transmission  {
 	server 192.168.1.2:9091;
 }
 
+upstream droppy {
+        server 192.168.1.133:8989;
+        keepalive 32;
+}
+
 server {
 	listen 80 default_server;
 	listen [::]:80 default_server;
@@ -60,8 +65,8 @@ server {
 		access_log off;		
 	}
 
-	location /sickrage {
-		proxy_pass http://192.168.1.7:8081;
+	location /sonarr {
+		proxy_pass http://192.168.1.133:8998;
 		auth_basic_user_file /etc/nginx/.htpasswd;
 		proxy_set_header X-Real-IP $remote_addr;
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -78,9 +83,27 @@ server {
 		auth_basic_user_file /etc/nginx/.htpasswd;    
 	}
 	
-	# Currently inactive (replace with cloud document server and set up sync on Windows desktop?)
 	location /docs/ {
-		proxy_pass http://192.168.1.99:8000/;
+                      proxy_pass http://droppy/;
+		      proxy_set_header Host $host;
+		      proxy_set_header Upgrade $http_upgrade;
+		      proxy_set_header Connection $http_connection;
+		      proxy_set_header X-Real-IP $remote_addr;
+		      proxy_set_header X-Real-Port $remote_port;
+		      proxy_set_header X-Forwarded-Proto $scheme;
+		      proxy_http_version 1.1;
+		      proxy_cache off;
+		      proxy_buffering off;
+		      proxy_redirect off;
+		      proxy_request_buffering off;
+		      proxy_ignore_client_abort on;
+		      proxy_connect_timeout 7200;
+		      proxy_read_timeout 7200;
+		      proxy_send_timeout 7200;		
+	}
+
+	location /request {
+	        proxy_pass http://192.168.1.133:3000/;
 		proxy_set_header    X-Forwarded-Server $host;
 		proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
 		proxy_set_header    X-Real-IP $remote_addr;
