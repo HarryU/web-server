@@ -1,0 +1,21 @@
+server {
+	server_name localhost;
+
+	error_page 404 /404.html;
+	location = /404.html {
+		root /var/www/html;
+		internal;		
+	}
+
+	root /var/www/html;
+	index index.html;
+
+	location / {
+		try_files $uri $uri/ $uri.html =404;
+	}
+
+	location ~ /.well-known {
+		allow all;  
+	}
+
+}
