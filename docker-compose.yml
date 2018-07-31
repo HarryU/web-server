@@ -11,46 +11,23 @@ services:
       - ./reverseproxy:/etc/nginx/sites-enabled/reverseproxy
       - ./ssl-153.duckdns.org.conf:/etc/nginx/snippets/ssl-153.duckdns.org.conf
       - ./ssl-params.conf:/etc/nginx/snippets/ssl-params.conf
-      - /etc/letsencrypt/live/153.duckdns.org/fullchain.pem:/etc/letsencrypt/live/153.duckdns.org/fullchain.pem
-      - /etc/letsencrypt/live/153.duckdns.org/privkey.pem:/etc/letsencrypt/live/153.duckdns.org/privkey.pem
+      - /etc/letsencrypt/live/153.duckdns.org-0002/fullchain.pem:/etc/letsencrypt/live/153.duckdns.org-0002/fullchain.pem
+      - /etc/letsencrypt/live/153.duckdns.org-0002/privkey.pem:/etc/letsencrypt/live/153.duckdns.org-0002/privkey.pem
       - /etc/ssl/certs/dhparam.pem:/etc/ssl/certs/dhparam.pem
   resume:
     image: harryu/resume
     ports:
       - 5000:5000
     restart: always
-  guac-db:
-    hostname: guac-db
-    build:
-      context: .
-    restart: always
-    volumes:
-      - data:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-
-  guacd:
-    hostname: guacd
-    image: guacamole/guacd:0.9.12-incubating
-    restart: always
-
-  guacamole:
-    image: guacamole/guacamole:0.9.12-incubating
-    restart: always
+  radarr:
+    image: linuxserver/radarr
     ports:
-      - 8080:8080
-    links:
-      - guacd
-      - guac-db
+      - 7878:7878
+    volumes:
+      - /radarr_data:/config
+      - /mnt/movies:/movies
+      - /mnt/downloads:/downloads
+      - /etc/localtime:/etc/localtime:ro
     environment:
-      GUACD_HOSTNAME: guacd
-      MYSQL_HOSTNAME: guac-db
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-
-volumes:
-  data:
+      - PGID=1000
+      - PUID=1000
