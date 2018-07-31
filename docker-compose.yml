@@ -19,3 +19,38 @@ services:
     ports:
       - 5000:5000
     restart: always
+  guac-db:
+    hostname: guac-db
+    build:
+      context: .
+    restart: always
+    volumes:
+      - data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+  guacd:
+    hostname: guacd
+    image: guacamole/guacd:0.9.12-incubating
+    restart: always
+
+  guacamole:
+    image: guacamole/guacamole:0.9.12-incubating
+    restart: always
+    ports:
+      - 8080:8080
+    links:
+      - guacd
+      - guac-db
+    environment:
+      GUACD_HOSTNAME: guacd
+      MYSQL_HOSTNAME: guac-db
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+volumes:
+  data:
