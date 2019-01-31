@@ -9,13 +9,13 @@ upstream portainer {
 server {
 	listen 80 default_server;
 	listen [::]:80 default_server;
-	server_name _;
-	return 301 https://$host$request_uri;
+	server_name hmucs.co.uk;
+	return 301 https://hmucs.co.uk/$request_uri;
 }
 
 server {
-	listen 443 ssl http2 default_server;
-	listen [::]:443 ssl http2 default_server;
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
 	ssl_certificate /config/keys/letsencrypt/fullchain.pem;
 	ssl_certificate_key /config/keys/letsencrypt/privkey.pem;
 	ssl_dhparam /config/nginx/dhparams.pem;
@@ -23,7 +23,11 @@ server {
 	ssl_prefer_server_ciphers on;
 
 
-	server_name www.153.duckdns.org;
+	server_name hmucs.co.uk;
+
+	if ($host = hmucs@yahoo.co.uk) {
+		return 301 https://hmucs.co.uk$request_uri;
+	}
 
 	error_page 404 /404.html;
 	location = /404.html {
@@ -131,6 +135,62 @@ server {
 		proxy_buffers           4 32k;
 		client_max_body_size    500m;
 		client_body_buffer_size 128k;
+	}
+
+	location /temp/ {
+		proxy_pass http://192.168.0.140:8080/temp;
+	}
+}
+
+server {
+
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
+	ssl_certificate /config/keys/letsencrypt/fullchain.pem;
+	ssl_certificate_key /config/keys/letsencrypt/privkey.pem;
+	ssl_dhparam /config/nginx/dhparams.pem;
+	ssl_ciphers 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA';
+	ssl_prefer_server_ciphers on;
+
+	server_name grafana.hmucs.co.uk;
+
+	location / {
+		proxy_pass http://192.168.0.21:3000/;
+	}
+
+	location ~ /.well-known {
+		allow all;
+	}
+}
+
+server {
+
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
+	ssl_certificate /config/keys/letsencrypt/fullchain.pem;
+	ssl_certificate_key /config/keys/letsencrypt/privkey.pem;
+	ssl_dhparam /config/nginx/dhparams.pem;
+	ssl_ciphers 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA';
+	ssl_prefer_server_ciphers on;
+
+	server_name blog.hmucs.co.uk;
+
+	location / {
+		proxy_set_header X-Forwarded-For		 $proxy_add_x_forwarded_for;
+		proxy_set_header Host				 $http_host;
+		proxy_set_header X-Real-IP			 $remote_addr;
+		proxy_set_header X-Forwarded-Proto		 $scheme;
+		proxy_http_version                   		 1.1;
+		proxy_connect_timeout                		 90;
+		proxy_send_timeout                   		 90;
+		proxy_read_timeout                   		 90;
+		proxy_buffer_size                    		 4k;
+		proxy_buffers                        		 4 32k;
+		proxy_busy_buffers_size              		 64k;
+		proxy_temp_file_write_size			 64k;
+		client_max_body_size				 10m;
+		client_body_buffer_size				 128k;
+		proxy_pass					 http://192.168.0.21:2368;
 	}
 
 	location ~ /.well-known {
