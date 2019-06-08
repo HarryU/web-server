@@ -1,0 +1,10 @@
+- hosts: all
+  tasks:
+    - name: Install docker pre-requisites
+      apt: name={{item}} update_cache=yes
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common

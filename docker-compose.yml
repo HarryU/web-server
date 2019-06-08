@@ -1,7 +1,8 @@
 version: '3'
 services:
-  letsencrypt:
+  reverse_proxy:
     image: linuxserver/letsencrypt
+    container_name: reverse_proxy
     ports:
       - 80:80
       - 443:443
@@ -12,18 +13,22 @@ services:
       - EMAIL=hmucs@yahoo.co.uk
       - URL=hmucs.co.uk
       - SUBDOMAINS=wildcard
-      - VALIDATION=duckdns
-      - DUCKDNSTOKEN=e916251d-df3d-4382-a07b-2ad137142020
+      - VALIDATION=dns
+      - DNSPLUGIN=cloudflare
       - TZ=GMT
+    cap_add:
+      - NET_ADMIN
     volumes:
       - ./nginx-config:/config
   resume:
     image: harryu/resume
+    container_name: website
     ports:
       - 5000:5000
     restart: always
   radarr:
     image: linuxserver/radarr
+    container_name: radarr
     ports:
       - 7878:7878
     volumes:
@@ -34,8 +39,10 @@ services:
     environment:
       - PGID=1000
       - PUID=1000
+    restart: always
   sonarr:
     image: linuxserver/sonarr
+    container_name: sonarr
     ports:
       - 8989:8989
     volumes:
@@ -46,8 +53,10 @@ services:
     environment:
       - PGID=1000
       - PUID=1000
+    restart: always
   jackett:
     image: linuxserver/jackett
+    container_name: jackett
     ports:
       - 9117:9117
     volumes:
@@ -57,11 +66,13 @@ services:
       - PGID=1000
       - PUID=1000
       - TZ=GMT
+    restart: always
   pihole:
     image: pihole/pihole:latest
+    container_name: pihole
     dns:
       - 127.0.0.1
-      - 1.1.1.1
+      - 208.67.222.222
     ports:
       - "53:53/tcp"
       - "53:53/udp"
@@ -70,15 +81,16 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      ServerIP: 192.168.0.21
+      ServerIP: 192.168.1.35
       PROXY_LOCATION: pihole
-      VIRTUAL_HOST: 192.168.0.21:980
+      VIRTUAL_HOST: 192.168.1.35:980
     volumes:
       - '/etc/pihole/:/etc/pihole/'
       - '/var/log/pihole.log:/var/log/pihole.log'
     restart: always
   ghost:
     image: ghost:latest
+    container_name: blog
     restart: always
     ports:
       - 2368:2368
@@ -90,20 +102,19 @@ services:
       database__connection__password: password
       database__connection__database: ghost
       mail__transport: SMTP
-      mail__service: 'Gmail'
-      mail__options__host: 'smtp.gmail.com'
-      mail__options__port: 465
-      mail__options__secureConnection: 'true'
-      mail__options__auth__user: 'hmucs1@gmail.com'
-      mail__options__auth__pass: 'B%Z9iE$$1!x'
+      mail__service: 'Mailgun'
+      mail__options__auth__user: postmaster@hmucs.co.uk
+      mail__options__auth__pass: 70b1be20bcdf45bf05da76c02fef071b-c8c889c9-ecdaee53
       url: https://blog.hmucs.co.uk
   ghost_db:
     image: mysql:5.7
+    container_name: blog_db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
   influxdb:
     image: influxdb:latest
+    container_name: influxdb
     volumes:
       - /opt/appdata/influxdb:/var/lib/influxdb
     environment:
@@ -112,14 +123,82 @@ services:
     ports:
       - 8083:8083
       - 8086:8086
+    restart: always
   grafana:
     image: grafana/grafana
+    container_name: grafana
     volumes:
       - /opt/appdata/grafana:/var/lib/grafana
-    #environment:
-    #  GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
-    #  GF_SERVER_DOMAIN: hmucs.co.uk
+    environment:
+      GF_INSTALL_PLUGINS: grafana-clock-panel
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/grafana"
     ports:
-      - 3000:3000
+      - 3001:3000
     restart:
       always
+  telegraf:
+    image: nuntz/telegraf-snmp
+    container_name: telegraf
+    links:
+      - influxdb
+    volumes:
+      - /opt/appdata/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /opt/appdata/telegraf/mibsdir:/root/.snmp/mibs:ro
+  chronograf:
+    image: chronograf:0.12
+    container_name: chronograf
+    volumes:
+      - /opt/appdata/chronograf:/var/lib/chronograf
+    ports:
+      - "10000:10000"
+    links:
+      - influxdb
+  unifi-controller:
+    image: linuxserver/unifi-controller
+    container_name: unifi
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /opt/appdata/unifi:/config
+    ports:
+      - 3478:3478/udp
+      - 10001:10001/udp
+      - 8080:8080
+      - 8081:8081
+      - 8443:8443
+      - 8843:8843
+      - 8880:8880
+      - 6789:6789
+    restart: unless-stopped
+  portainer:
+    image: portainer/portainer
+    container_name: portainer
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/appdata/portainer:/data
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    environment:
+      - VERSION=latest
+      - PUID=1000
+      - PGID=1000
+      - TZ=GMT
+    volumes:
+      - transcode:/transcode
+      - config:/config
+      - /mnt/movies:/data/movies
+      - /mnt/downloads:/data/downloads
+      - /mnt/tv:/data/tvshows
+    network_mode: host
+
+volumes:
+  config:
+    external: true
+  transcode:
+    external: true

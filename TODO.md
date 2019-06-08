@@ -1,2 +1,2 @@
 + Update README.md
-+ Create setup script (bash?)
++ Setup ansible provisioning
