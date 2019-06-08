@@ -196,6 +196,30 @@ services:
       - /mnt/downloads:/data/downloads
       - /mnt/tv:/data/tvshows
     network_mode: host
+  guacamole:
+    image: guacamole/guacamole
+    container_name: guacamole
+    network_mode: bridge
+    links:
+      - guacd:guacd
+      - guac-postgres:postgres
+    environment:
+      - POSTGRES_DATABASE=guacamole_db
+      - POSTGRES_USER=guacamole_user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - 8383:8080
+  guacd:
+    image: guacamole/guacd
+    container_name: guacd
+    network_mode: bridge
+  guac-postgres:
+    image: postgres
+    container_name: guac-postgres
+    network_mode: bridge
+    volumes:
+      - /tmp/scripts:/tmp/scripts
+      - /opt/appdata/postgres:/var/lib/postgresql/data
 
 volumes:
   config:

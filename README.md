@@ -1,13 +1,15 @@
 # Web server and container host setup
 ## Setting up the web server
-0. Install and configure the dependencies:
-	+ `sudo apt install docker.io`
-	+ `sudo usermod -aG docker $(whoami)`
+1. Install and configure the dependencies:
+	+ [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/):
+		+ `sudo apt-get remove docker docker.io containerd runc`
+		+ `sudo apt-get update`
+		+ `sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common`
+		+ `curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -`
+		+ `sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"`
+		+ `sudo apt-get update`
+		+ `sudo apt-get install docker-ce docker-ce-cli containerd.io`
 1. Clone the repo
-2. Run `docker-compose up -d`
-
-### Guacamole
-
-* [Installing Guacamole with Docker](https://guacamole.incubator.apache.org/doc/gug/guacamole-docker.html)
-* [Steps to put everything in a seperate container](https://www.cb-net.co.uk/linux/running-guacamole-from-a-docker-container-on-ubuntu-16-04-lts-16-10/)
-* Use Postgres, combining the steps from the above two links - current versions of MySQL/guac appear to be broken when used together through docker (some weird auth issue)
+1. Run `docker-compose up -d`
+1. Copy the reverseproxy configuration file into the correct directory:
+	+ `cp reverseproxy nginx-config/nginx/sites-enabled/default`
