@@ -6,7 +6,7 @@ services:
     ports:
       - 80:80
       - 443:443
-    restart: always
+    restart: unless-stopped
     environment:
       - PGID=1000
       - PUID=1000
@@ -25,7 +25,7 @@ services:
     container_name: website
     ports:
       - 5000:5000
-    restart: always
+    restart: unless-stopped
   radarr:
     image: linuxserver/radarr
     container_name: radarr
@@ -39,7 +39,7 @@ services:
     environment:
       - PGID=1000
       - PUID=1000
-    restart: always
+    restart: unless-stopped
   sonarr:
     image: linuxserver/sonarr
     container_name: sonarr
@@ -53,7 +53,7 @@ services:
     environment:
       - PGID=1000
       - PUID=1000
-    restart: always
+    restart: unless-stopped
   jackett:
     image: linuxserver/jackett
     container_name: jackett
@@ -66,7 +66,7 @@ services:
       - PGID=1000
       - PUID=1000
       - TZ=GMT
-    restart: always
+    restart: unless-stopped
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
@@ -87,11 +87,11 @@ services:
     volumes:
       - '/etc/pihole/:/etc/pihole/'
       - '/var/log/pihole.log:/var/log/pihole.log'
-    restart: always
+    restart: unless-stopped
   ghost:
     image: ghost:latest
     container_name: blog
-    restart: always
+    restart: unless-stopped
     ports:
       - 2368:2368
     environment:
@@ -109,7 +109,7 @@ services:
   ghost_db:
     image: mysql:5.7
     container_name: blog_db
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: password
   influxdb:
@@ -123,22 +123,31 @@ services:
     ports:
       - 8083:8083
       - 8086:8086
-    restart: always
+    restart: unless-stopped
   grafana:
     image: grafana/grafana
     container_name: grafana
     volumes:
       - /opt/appdata/grafana:/var/lib/grafana
+      - ./nginx-config/keys/letsencrypt/fullchain.pem:/cert.pem
+      - ./nginx-config/keys/letsencrypt/privkey.pem:/key.pem
+    user: "1000"
     environment:
-      GF_INSTALL_PLUGINS: grafana-clock-panel
-      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/grafana"
+      - PGID=1000
+      - PUID=1000
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+      - GF_SERVER_DOMAIN=hmucs.co.uk
+      - GF_SERVER_PROTOCOL=https
+      - GF_SERVER_CERT_FILE=/cert.pem
+      - GF_SERVER_CERT_KEY=/key.pem
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
     ports:
       - 3001:3000
-    restart:
-      always
+    restart: unless-stopped
   telegraf:
     image: nuntz/telegraf-snmp
     container_name: telegraf
+    restart: unless-stopped
     links:
       - influxdb
     volumes:
@@ -147,6 +156,7 @@ services:
   chronograf:
     image: chronograf:0.12
     container_name: chronograf
+    restart: unless-stopped
     volumes:
       - /opt/appdata/chronograf:/var/lib/chronograf
     ports:
@@ -175,7 +185,7 @@ services:
     image: portainer/portainer
     container_name: portainer
     command: -H unix:///var/run/docker.sock
-    restart: always
+    restart: unless-stopped
     ports:
       - 9000:9000
     volumes:
@@ -184,6 +194,7 @@ services:
   plex:
     image: linuxserver/plex
     container_name: plex
+    restart: unless-stopped
     environment:
       - VERSION=latest
       - PUID=1000
@@ -200,6 +211,7 @@ services:
     image: guacamole/guacamole
     container_name: guacamole
     network_mode: bridge
+    restart: unless-stopped
     links:
       - guacd:guacd
       - guac-postgres:postgres
@@ -213,13 +225,44 @@ services:
     image: guacamole/guacd
     container_name: guacd
     network_mode: bridge
+    restart: unless-stopped
   guac-postgres:
     image: postgres
     container_name: guac-postgres
     network_mode: bridge
+    restart: unless-stopped
     volumes:
       - /tmp/scripts:/tmp/scripts
       - /opt/appdata/postgres:/var/lib/postgresql/data
+  heimdall:
+    image: linuxserver/heimdall
+    container_name: heimdall
+    ports:
+      - 1080:80
+      - 10443:443
+    restart: unless-stopped
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - TZ=GMT
+    volumes:
+      - /opt/appdata/heimdall:/config
+  transmission:
+    image: linuxserver/transmission
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+        #- TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+    volumes:
+      - /opt/appdata/transmission:/config
+      - /mnt/downloads:/downloads
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    restart: unless-stopped
 
 volumes:
   config:
