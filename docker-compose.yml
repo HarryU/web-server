@@ -3,6 +3,8 @@ services:
   reverse_proxy:
     image: linuxserver/letsencrypt
     container_name: reverse_proxy
+    dns:
+      - 8.8.8.8
     ports:
       - 80:80
       - 443:443
@@ -23,12 +25,16 @@ services:
   resume:
     image: harryu/resume
     container_name: website
+    dns:
+      - 8.8.8.8
     ports:
       - 5000:5000
     restart: unless-stopped
   radarr:
     image: linuxserver/radarr
     container_name: radarr
+    dns:
+      - 8.8.8.8
     ports:
       - 7878:7878
     volumes:
@@ -43,6 +49,8 @@ services:
   sonarr:
     image: linuxserver/sonarr
     container_name: sonarr
+    dns:
+      - 8.8.8.8
     ports:
       - 8989:8989
     volumes:
@@ -57,6 +65,8 @@ services:
   jackett:
     image: linuxserver/jackett
     container_name: jackett
+    dns:
+      - 8.8.8.8
     ports:
       - 9117:9117
     volumes:
@@ -72,7 +82,7 @@ services:
     container_name: pihole
     dns:
       - 127.0.0.1
-      - 208.67.222.222
+      - 8.8.8.8
     ports:
       - "53:53/tcp"
       - "53:53/udp"
@@ -91,6 +101,8 @@ services:
   ghost:
     image: ghost:latest
     container_name: blog
+    dns:
+      - 8.8.8.8
     restart: unless-stopped
     ports:
       - 2368:2368
@@ -127,6 +139,8 @@ services:
   grafana:
     image: grafana/grafana
     container_name: grafana
+    dns:
+      - 8.8.8.8
     volumes:
       - /opt/appdata/grafana:/var/lib/grafana
       - ./nginx-config/keys/letsencrypt/fullchain.pem:/cert.pem
@@ -147,6 +161,8 @@ services:
   telegraf:
     image: nuntz/telegraf-snmp
     container_name: telegraf
+    dns:
+      - 8.8.8.8
     restart: unless-stopped
     links:
       - influxdb
@@ -156,6 +172,8 @@ services:
   chronograf:
     image: chronograf:0.12
     container_name: chronograf
+    dns:
+      - 8.8.8.8
     restart: unless-stopped
     volumes:
       - /opt/appdata/chronograf:/var/lib/chronograf
@@ -166,6 +184,8 @@ services:
   unifi-controller:
     image: linuxserver/unifi-controller
     container_name: unifi
+    dns:
+      - 8.8.8.8
     environment:
       - PUID=1000
       - PGID=1000
@@ -184,6 +204,8 @@ services:
   portainer:
     image: portainer/portainer
     container_name: portainer
+    dns:
+      - 8.8.8.8
     command: -H unix:///var/run/docker.sock
     restart: unless-stopped
     ports:
@@ -192,14 +214,17 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/appdata/portainer:/data
   plex:
-    image: linuxserver/plex
+    image: plexinc/pms-docker:plexpass
     container_name: plex
+    dns:
+      - 8.8.8.8
     restart: unless-stopped
     environment:
-      - VERSION=latest
+      - VERSION=plexpass
       - PUID=1000
       - PGID=1000
       - TZ=GMT
+      - PLEX_CLAIM="kYx6LskNGnEnzcHzHWZz"
     volumes:
       - transcode:/transcode
       - config:/config
@@ -210,6 +235,8 @@ services:
   guacamole:
     image: guacamole/guacamole
     container_name: guacamole
+    dns:
+      - 8.8.8.8
     network_mode: bridge
     restart: unless-stopped
     links:
@@ -250,6 +277,8 @@ services:
   transmission:
     image: linuxserver/transmission
     container_name: transmission
+    dns:
+      - 8.8.8.8
     environment:
       - PUID=1000
       - PGID=1000
@@ -263,6 +292,99 @@ services:
       - 51413:51413
       - 51413:51413/udp
     restart: unless-stopped
+  cowyo:
+    image: schollz/cowyo
+    container_name: cowyo
+    volumes:
+      - /opt/appdata/cowyo:/data
+    ports:
+      - 8050:8050
+    restart: unless-stopped
+  rwtxt:
+    image: schollz/rwtxt
+    container_name: rwtxt
+    volumes:
+      - /opt/appdata/rwtxt:/data
+    ports:
+      - 8152:8152
+    restart: unless-stopped
+  lychee:
+      image: linuxserver/lychee
+      container_name: lychee
+      environment:
+        - PUID=1000
+        - PGID=1000
+        - TZ=Europe/London
+      volumes:
+        - /opt/appdata/lychee/config:/config
+        - /mnt/photos/Toby:/pictures
+      ports:
+        - 1180:80
+      restart: unless-stopped
+  piwigo:
+    image: linuxserver/piwigo
+    container_name: piwigo
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - /opt/appdata/piwigo/config:/config
+    ports:
+      - 1280:80
+    restart: unless-stopped
+    links:
+      - piwigo_db:mysql
+  piwigo_db:
+    image: mysql:5
+    container_name: piwigo_db
+    volumes:
+      - /opt/appdata/piwigo_db:/var/lib/mysql
+    environment:
+      - MYSQL_USER=piwigo
+      - MYSQL_PASSWORD=piwigo
+      - MYSQL_DATABASE=piwigo
+      - MYSQL_ROOT_PASSWORD=password
+  openldap:
+    container_name: openldap
+    image: osixia/openldap:1.3.0
+    ports:
+      - 389:389
+      - 636:636
+    environment:
+      - LDAP_ORGANISATION=hmucs
+      - LDAP_DOMAIN=hmucs.co.uk
+      - LDAP_BASE_DN=dc=hmucs,dc=co,dc=uk
+      - LDAP_ADMIN_PASSWORD=password
+      - LDAP_TLS_CIPHER_SUITE=NORMAL
+      - LDAP_TLS_VERIFY_CLIENT=allow
+      - HOSTNAME=openldap
+      - LDAP_CONFIG_PASSWORD=password
+    tty: true
+    stdin_open: true
+    volumes:
+      - /opt/appdata/openldap/ldap:/var/lib/ldap
+      - /opt/appdata/openldap/slapd.d:/etc/ldap/slapd.d
+      - /opt/appdata/openldap/service/slapd/assets/certs/:/container/service/slapd/assets/certs/
+  ldapadmin:
+    container_name: ldapadmin
+    image: osixia/phpldapadmin:0.9.0
+    ports:
+      - 6443:443
+    links:
+      - openldap
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "openldap"
+  openvpn:
+    cap_add:
+      - NET_ADMIN
+    image: kylemanna/openvpn
+    container_name: openvpn
+    ports:
+      - "1194:1194/udp"
+    restart: always
+    volumes:
+      - /opt/appdata/openvpn-data/conf:/etc/openvpn
 
 volumes:
   config:
